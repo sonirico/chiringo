@@ -39,6 +39,7 @@ func NewNode(ch *Chain) *Node {
 	webServer := http.NewServeMux()
 	router := mux.NewRouter()
 	router.HandleFunc("/blocks", node.GetBlockChain).Methods(http.MethodGet)
+	router.HandleFunc("/blocks/{index:[0-9]+}", node.GetBlock).Methods(http.MethodGet)
 	webServer.Handle("/", router)
 	node.webServer = webServer
 	return node
