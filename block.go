@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"io"
 	"time"
 )
@@ -56,16 +55,4 @@ func (b Block) Dump(w io.Writer) {
 	_, _ = w.Write([]byte(b.PreviousHash))
 	_, _ = w.Write([]byte(b.Timestmap.String()))
 	_, _ = w.Write(b.Data)
-}
-
-type JSONBlock struct {
-	Block
-}
-
-func (jb *JSONBlock) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, jb)
-}
-
-func (jb *JSONBlock) MarshalJSON() ([]byte, error) {
-	return json.Marshal(jb.Block)
 }

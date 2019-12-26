@@ -1,8 +1,10 @@
 package main
 
 func main() {
-	done := make(chan struct{}, 1)
+	done := make(chan struct{})
 	node := NewNode(NewChain())
-	go node.ServeHTTP()
+	web := newServer(node)
+	web.setUp()
+	go web.Serve()
 	<-done
 }

@@ -9,27 +9,27 @@ import (
 	"strings"
 )
 
-func (n *Node) GetBlockChain(w http.ResponseWriter, req *http.Request) {
+func (s *server) HandleGetBlockChain(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(n.chain.elements)
+	json.NewEncoder(w).Encode(s.node.chain.elements)
 }
 
-func (n *Node) GetBlock(w http.ResponseWriter, req *http.Request) {
+func (s *server) HandleGetBlock(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	blockIndexParam := vars["index"]
 	index, err := strconv.Atoi(blockIndexParam)
-	if err != nil || index < 0 || index >= n.chain.Size() {
+	if err != nil || index < 0 || index >= s.node.chain.Size() {
 		http.NotFound(w, req)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(n.chain.elements[index])
+	json.NewEncoder(w).Encode(s.node.chain.elements[index])
 }
 
-func (n *Node) MineBlock(w http.ResponseWriter, req *http.Request) {
+func (s *server) HandleMineBlock(w http.ResponseWriter, req *http.Request) {
 	type payload struct {
 		Data string `json:"data"`
 	}
@@ -39,23 +39,23 @@ func (n *Node) MineBlock(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "invalid payload", http.StatusUnprocessableEntity)
 		return
 	}
-	block := n.chain.NextBlock([]byte(pay.Data))
+	block := s.node.chain.NextBlock([]byte(pay.Data))
 	w.Header().Set("Location", fmt.Sprintf("/blocks/%d", block.Index))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(block)
 }
 
-type PeerJson struct {
+type peerJson struct {
 	Peer
 	Http string `json:"http_uri"`
 	Ws   string `json:"ws_uri"`
 }
 
-func (n *Node) GetPeers(w http.ResponseWriter, req *http.Request) {
-	peers := make([]PeerJson, len(n.peers))
-	for i, peer := range n.peers {
-		peers[i] = PeerJson{
+func (s *server) GetPeers(w http.ResponseWriter, req *http.Request) {
+	peers := make([]peerJson, len(s.node.peers))
+	for i, peer := range s.node.peers {
+		peers[i] = peerJson{
 			Peer: peer,
 			Http: peer.HttpUri(),
 			Ws:   peer.WsUri(),
@@ -65,7 +65,7 @@ func (n *Node) GetPeers(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(peers)
 }
 
-func (n *Node) AddPeer(w http.ResponseWriter, req *http.Request) {
+func (s *server) AddPeer(w http.ResponseWriter, req *http.Request) {
 	type payload struct {
 		Host string `json:"host"`
 		Port string `json:"port"`
@@ -79,18 +79,18 @@ func (n *Node) AddPeer(w http.ResponseWriter, req *http.Request) {
 	pay.Host = strings.TrimSpace(pay.Host)
 	pay.Port = strings.TrimSpace(pay.Port)
 	// TODO: Perform further checks on host-port pairs
-	for _, peer := range n.peers {
+	for _, peer := range s.node.peers {
 		if peer.Host == pay.Host && pay.Port == peer.Port {
 			http.Error(w, "peer already registered", http.StatusConflict)
 			return
 		}
 	}
 	peer := NewPeer(pay.Host, pay.Port)
-	n.peers = append(n.peers, peer)
+	s.node.AddPeer(peer)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", fmt.Sprintf("/peers/%s", peer.Id))
 	w.WriteHeader(http.StatusCreated)
-	jsonPeer := PeerJson{
+	jsonPeer := peerJson{
 		Peer: peer,
 		Http: peer.HttpUri(),
 		Ws:   peer.WsUri(),
