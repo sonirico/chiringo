@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
@@ -22,8 +23,11 @@ func NewNode(ch *Chain) *Node {
 	node := &Node{
 		chain: ch,
 	}
+	// Web server
 	webServer := http.NewServeMux()
-	webServer.HandleFunc("/", node.GetBlockChain)
+	router := mux.NewRouter()
+	router.HandleFunc("/blocks", node.GetBlockChain).Methods(http.MethodGet)
+	webServer.Handle("/", router)
 	node.webServer = webServer
 	return node
 }
