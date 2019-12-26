@@ -40,7 +40,7 @@ func (n *Node) MineBlock(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	block := n.chain.NextBlock([]byte(pay.Data))
-	w.Header().Set("Location", fmt.Sprintf("%s/blocks/%d", req.Host, block.Index))
+	w.Header().Set("Location", fmt.Sprintf("/blocks/%d", block.Index))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(block)
