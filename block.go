@@ -31,7 +31,7 @@ func NewBlock(index uint64, timestamp time.Time, hash, previousHash string, data
 }
 
 func NewGenesisBlock() Block {
-	ts := time.Date(2019, time.December, 25, 16, 10, 00, 0, time.UTC)
+	ts := time.Date(2019, 12, 25, 16, 10, 00, 0, time.UTC)
 	block := NewBlock(0, ts, "", "", []byte("Sitting in the dock of the bay"))
 	block.Hash = Hash(block)
 	return block

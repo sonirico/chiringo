@@ -13,6 +13,18 @@ type Peer struct {
 	port string
 }
 
+func (p Peer) Address() string {
+	return fmt.Sprintf("%s:%s", p.host, p.port)
+}
+
+func (p Peer) HttpUri() string {
+	return fmt.Sprintf("%s://%s", "http", p.Address())
+}
+
+func (p Peer) WsUri() string {
+	return fmt.Sprintf("%s://%s", "ws", p.Address())
+}
+
 type Node struct {
 	chain     *Chain
 	peers     []Peer
