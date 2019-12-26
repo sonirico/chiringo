@@ -44,3 +44,21 @@ func (n *Node) MineBlock(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(block)
 }
+
+type PeerJson struct {
+	Peer
+	Http string `json:"http_uri"`
+	Ws   string `json:"ws_uri"`
+}
+
+func (n *Node) GetPeers(w http.ResponseWriter, req *http.Request) {
+	peers := make([]PeerJson, len(n.peers))
+	for i, peer := range n.peers {
+		peers[i] = PeerJson{
+			Peer: peer,
+			Http: peer.HttpUri(),
+			Ws:   peer.WsUri(),
+		}
+	}
+	json.NewEncoder(w).Encode(peers)
+}

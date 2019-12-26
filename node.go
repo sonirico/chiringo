@@ -9,12 +9,12 @@ import (
 )
 
 type Peer struct {
-	host string
-	port string
+	Host string `json:"host"`
+	Port string `json:"port"`
 }
 
 func (p Peer) Address() string {
-	return fmt.Sprintf("%s:%s", p.host, p.port)
+	return fmt.Sprintf("%s:%s", p.Host, p.Port)
 }
 
 func (p Peer) HttpUri() string {
@@ -41,6 +41,7 @@ func NewNode(ch *Chain) *Node {
 	router.HandleFunc("/blocks", node.GetBlockChain).Methods(http.MethodGet)
 	router.HandleFunc("/blocks", node.MineBlock).Methods(http.MethodPost)
 	router.HandleFunc("/blocks/{index:[0-9]+}", node.GetBlock).Methods(http.MethodGet)
+	router.HandleFunc("/peers", node.GetPeers).Methods(http.MethodGet)
 	webServer.Handle("/", router)
 	node.webServer = webServer
 	return node
