@@ -13,9 +13,8 @@ type Chain struct {
 
 func NewChain() *Chain {
 	c := &Chain{
-		genesis:  NewGenesisBlock(),
-		last:     nil,
-		elements: make([]Block, 1),
+		genesis: NewGenesisBlock(),
+		last:    nil,
 	}
 	c.last = &c.genesis
 	c.Append(c.genesis)
@@ -35,7 +34,7 @@ func (c *Chain) NextBlock(data []byte) Block {
 	}
 	now := time.Now()
 	newBlock := NewBlock(b.Index+1, now, "", b.Hash, data)
-	newBlock.Hash = newBlock.CalculateHash()
+	newBlock.Hash = Hash(newBlock)
 	c.last = &newBlock
 	c.Append(newBlock)
 	return newBlock
@@ -65,7 +64,7 @@ func (c *Chain) Replace(blocks []Block) {
 
 func chainIsValid(blocks []Block) bool {
 	genesis := blocks[0]
-	if genesis.Hash != genesis.CalculateHash() {
+	if genesis.Hash != Hash(genesis) {
 		log.Fatal("genesis block compromised")
 		return false
 	}
@@ -94,7 +93,7 @@ func blockIsValid(next, prev Block) bool {
 		return false
 	}
 
-	if next.Hash != next.CalculateHash() {
+	if next.Hash != Hash(next) {
 		log.Fatal("current hash mismatch")
 		return false
 	}
