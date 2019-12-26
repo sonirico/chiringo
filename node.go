@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -9,8 +10,17 @@ import (
 )
 
 type Peer struct {
-	Host string `json:"host"`
-	Port string `json:"port"`
+	Id   uuid.UUID `json:"id"`
+	Host string    `json:"host"`
+	Port string    `json:"port"`
+}
+
+func NewPeer(h, p string) Peer {
+	return Peer{
+		Id:   uuid.New(),
+		Host: h,
+		Port: p,
+	}
 }
 
 func (p Peer) Address() string {
@@ -42,6 +52,7 @@ func NewNode(ch *Chain) *Node {
 	router.HandleFunc("/blocks", node.MineBlock).Methods(http.MethodPost)
 	router.HandleFunc("/blocks/{index:[0-9]+}", node.GetBlock).Methods(http.MethodGet)
 	router.HandleFunc("/peers", node.GetPeers).Methods(http.MethodGet)
+	router.HandleFunc("/peers", node.AddPeer).Methods(http.MethodPost)
 	webServer.Handle("/", router)
 	node.webServer = webServer
 	return node
