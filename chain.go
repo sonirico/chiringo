@@ -2,10 +2,13 @@ package main
 
 import (
 	"log"
+	"sync"
 	"time"
 )
 
 type Chain struct {
+	sync.RWMutex
+
 	genesis  Block
 	last     *Block
 	elements []Block
@@ -22,18 +25,20 @@ func NewChain() *Chain {
 }
 
 func (c *Chain) Append(b Block) {
+	c.RLock()
+	defer c.RUnlock()
 	c.elements = append(c.elements, b)
 }
 
 func (c *Chain) NextBlock(data []byte) Block {
-	var b Block
+	var prevBlock Block
 	if c.last != nil {
-		b = *c.last
+		prevBlock = *c.last
 	} else {
-		b = c.genesis
+		prevBlock = c.genesis
 	}
 	now := time.Now()
-	newBlock := NewBlock(b.Index+1, now, "", b.Hash, data)
+	newBlock := NewBlock(prevBlock.Index+1, now, "", prevBlock.Hash, data)
 	newBlock.Hash = Hash(newBlock)
 	c.last = &newBlock
 	c.Append(newBlock)
@@ -42,6 +47,14 @@ func (c *Chain) NextBlock(data []byte) Block {
 
 func (c *Chain) IsValid() bool {
 	return chainIsValid(c.elements)
+}
+
+func (c *Chain) Blocks() []Block {
+	c.Lock()
+	defer c.Unlock()
+	blocks := make([]Block, len(c.elements))
+	copy(blocks, c.elements)
+	return blocks
 }
 
 func (c Chain) Size() int {
@@ -57,6 +70,8 @@ func (c *Chain) Replace(blocks []Block) {
 		log.Fatal("current is Chain is larger than received, unable to replace")
 		return
 	}
+	c.RLock()
+	defer c.RUnlock()
 	c.elements = blocks
 	c.genesis = blocks[0]
 	c.last = &blocks[len(blocks)-1]
@@ -80,6 +95,10 @@ func chainIsValid(blocks []Block) bool {
 		index++
 	}
 	return true
+}
+
+func (c *Chain) LatestBlock() Block {
+	return *c.last
 }
 
 func blockIsValid(next, prev Block) bool {

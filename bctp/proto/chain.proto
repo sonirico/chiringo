@@ -1,0 +1,17 @@
+syntax = "proto3";
+package main;
+
+import "google/protobuf/timestamp.proto";
+
+message Block {
+    uint64 index = 1;
+    string hash = 2;
+    string prevHash = 3;
+    string data = 4;
+    google.protobuf.Timestamp created_at = 5;
+}
+
+message Chain {
+    repeated Block blocks = 1;
+}
+

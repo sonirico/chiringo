@@ -1,0 +1,17 @@
+syntax = "proto3";
+package main;
+
+import "chain.proto";
+
+message RequestChain {
+}
+
+message ResponseChain {
+    Chain chain = 1;
+}
+
+message RequestLatestBlock {
+}
+message ResponseLatestBlock {
+    Block block = 1;
+}

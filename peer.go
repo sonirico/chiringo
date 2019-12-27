@@ -2,31 +2,38 @@ package main
 
 import (
 	"fmt"
-	"github.com/google/uuid"
+	"hash/fnv"
 )
 
 type Peer struct {
-	Id   uuid.UUID `json:"id"`
-	Host string    `json:"host"`
-	Port string    `json:"port"`
+	Host     string `json:"host"`
+	HttpPort string `json:"http_port"`
+	WsPort   string `json:"ws_port"`
 }
 
-func NewPeer(h, p string) Peer {
-	return Peer{
-		Id:   uuid.New(),
-		Host: h,
-		Port: p,
+func NewPeer(host, httpPort, wsPort string) *Peer {
+	return &Peer{
+		Host:     host,
+		HttpPort: httpPort,
+		WsPort:   wsPort,
 	}
 }
 
-func (p Peer) Address() string {
-	return fmt.Sprintf("%s:%s", p.Host, p.Port)
-}
-
 func (p Peer) HttpUri() string {
-	return fmt.Sprintf("%s://%s", "http", p.Address())
+	return fmt.Sprintf("%s://%s:%s", "http", p.Host, p.HttpPort)
 }
 
 func (p Peer) WsUri() string {
-	return fmt.Sprintf("%s://%s", "ws", p.Address())
+	return fmt.Sprintf("%s://%s:%s", "ws", p.Host, p.WsPort)
+}
+
+func (p Peer) HashCode() uint32 {
+	payload := fmt.Sprintf("%s%s%s", p.Host, p.HttpPort, p.WsPort)
+	h := fnv.New32a()
+	h.Write([]byte(payload))
+	return h.Sum32()
+}
+
+type PeerClient struct {
+	peer *Peer
 }

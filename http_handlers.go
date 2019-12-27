@@ -40,6 +40,7 @@ func (s *server) HandleMineBlock(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	block := s.node.chain.NextBlock([]byte(pay.Data))
+	go s.node.BroadCastNewBlock(block)
 	w.Header().Set("Location", fmt.Sprintf("/blocks/%d", block.Index))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
@@ -47,28 +48,31 @@ func (s *server) HandleMineBlock(w http.ResponseWriter, req *http.Request) {
 }
 
 type peerJson struct {
-	Peer
+	Id   uint32 `json:"id"`
 	Http string `json:"http_uri"`
 	Ws   string `json:"ws_uri"`
 }
 
-func (s *server) GetPeers(w http.ResponseWriter, req *http.Request) {
+func (s *server) HandleGetPeers(w http.ResponseWriter, req *http.Request) {
 	peers := make([]peerJson, len(s.node.peers))
-	for i, peer := range s.node.peers {
+	i := 0
+	for _, peer := range s.node.peers {
 		peers[i] = peerJson{
-			Peer: peer,
+			Id:   peer.HashCode(),
 			Http: peer.HttpUri(),
 			Ws:   peer.WsUri(),
 		}
+		i++
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(peers)
 }
 
-func (s *server) AddPeer(w http.ResponseWriter, req *http.Request) {
+func (s *server) HandleAddPeer(w http.ResponseWriter, req *http.Request) {
 	type payload struct {
-		Host string `json:"host"`
-		Port string `json:"port"`
+		Host     string `json:"host"`
+		HttpPort string `json:"http_port"`
+		WsPort   string `json:"ws_port"`
 	}
 	var pay payload
 	err := json.NewDecoder(req.Body).Decode(&pay)
@@ -77,21 +81,19 @@ func (s *server) AddPeer(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	pay.Host = strings.TrimSpace(pay.Host)
-	pay.Port = strings.TrimSpace(pay.Port)
-	// TODO: Perform further checks on host-port pairs
-	for _, peer := range s.node.peers {
-		if peer.Host == pay.Host && pay.Port == peer.Port {
-			http.Error(w, "peer already registered", http.StatusConflict)
-			return
-		}
+	pay.HttpPort = strings.TrimSpace(pay.HttpPort)
+	pay.WsPort = strings.TrimSpace(pay.WsPort)
+	peer := NewPeer(pay.Host, pay.HttpPort, pay.WsPort)
+	if _, ok := s.node.peers[peer.HashCode()]; ok {
+		http.Error(w, "peer already registered", http.StatusConflict)
+		return
 	}
-	peer := NewPeer(pay.Host, pay.Port)
 	s.node.AddPeer(peer)
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Location", fmt.Sprintf("/peers/%s", peer.Id))
-	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Location", fmt.Sprintf("/peers/%d", peer.HashCode()))
+	w.WriteHeader(http.StatusCreated) // TODO: Should check connection, return 202
 	jsonPeer := peerJson{
-		Peer: peer,
+		Id:   peer.HashCode(),
 		Http: peer.HttpUri(),
 		Ws:   peer.WsUri(),
 	}

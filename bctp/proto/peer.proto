@@ -1,0 +1,7 @@
+syntax = "proto3";
+package main;
+
+message Peer {
+    string host = 1;
+    string port = 2;
+}

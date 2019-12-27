@@ -22,11 +22,11 @@ func newServer(node *Node) *server {
 
 func (s *server) setUp() {
 	router := mux.NewRouter()
-	router.HandleFunc("/blocks", s.GetBlockChain).Methods(http.MethodGet)
-	router.HandleFunc("/blocks", s.MineBlock).Methods(http.MethodPost)
-	router.HandleFunc("/blocks/{index:[0-9]+}", s.GetBlock).Methods(http.MethodGet)
-	router.HandleFunc("/peers", s.GetPeers).Methods(http.MethodGet)
-	router.HandleFunc("/peers", s.AddPeer).Methods(http.MethodPost)
+	router.HandleFunc("/blocks", s.HandleGetBlockChain).Methods(http.MethodGet)
+	router.HandleFunc("/blocks", s.HandleMineBlock).Methods(http.MethodPost)
+	router.HandleFunc("/blocks/{index:[0-9]+}", s.HandleGetBlock).Methods(http.MethodGet)
+	router.HandleFunc("/peers", s.HandleGetPeers).Methods(http.MethodGet)
+	router.HandleFunc("/peers", s.HandleAddPeer).Methods(http.MethodPost)
 	s.Handle("/", router)
 }
 
