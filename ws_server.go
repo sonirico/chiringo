@@ -43,8 +43,7 @@ func (ws *WsServer) serveWs(w http.ResponseWriter, req *http.Request) {
 	go node.Accept(client)
 }
 
-func (ws *WsServer) Serve() {
-	port := os.Getenv("WS_PORT") // TODO: Inject
+func (ws *WsServer) Serve(port string) {
 	address := fmt.Sprintf(":%s", port)
 	log.Printf("WS server listening on %s", address)
 	err := http.ListenAndServe(address, ws)

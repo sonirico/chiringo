@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	"os"
 )
 
 type server struct {
@@ -30,8 +29,7 @@ func (s *server) setUp() {
 	s.Handle("/", router)
 }
 
-func (s *server) Serve() {
-	port := os.Getenv("HTTP_PORT")
+func (s *server) Serve(port string) {
 	address := fmt.Sprintf(":%s", port)
 	log.Printf("HTTP server listening on %s", address)
 	err := http.ListenAndServe(address, s)

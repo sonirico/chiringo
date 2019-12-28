@@ -2,6 +2,8 @@ package main
 
 func main() {
 	done := make(chan struct{})
+	// read config
+	config := LoadConfig()
 	// the blockchain
 	chain := NewChain()
 	// the actual running node
